@@ -2,6 +2,8 @@ import Auth from './Auth';
 import Composer from './Composer';
 import { SESSION_EXPIRED_MESSAGE } from './createAuthStore';
 import Destinations from './Destinations';
+import PlaceSearch from './PlaceSearch';
+import Places from './Places';
 import Posts from './Posts';
 import ReplyDrafts from './ReplyDrafts';
 import Uploads from './Uploads';
@@ -46,6 +48,8 @@ const Session = {
 function reset_stores() {
   Composer.reset();
   Destinations.reset();
+  Places.reset();
+  PlaceSearch.reset();
   Posts.reset();
   Users.reset();
   ReplyDrafts.reset();

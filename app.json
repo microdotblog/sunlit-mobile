@@ -27,7 +27,15 @@
         }
       ],
       "./plugins/withReleaseSigning",
-      "./plugins/withBackupDisabled"
+      "./plugins/withBackupDisabled",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Sunlit uses your location to find nearby places when you check in.",
+          "isAndroidBackgroundLocationEnabled": false,
+          "isAndroidForegroundServiceEnabled": false
+        }
+      ]
     ],
     "android": {
       "package": "blog.micro.sunlit",

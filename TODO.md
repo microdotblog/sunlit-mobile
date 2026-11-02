@@ -37,11 +37,13 @@ Verified on the Pixel 7 emulator while signed in: the compose button and its lon
 
 ## Milestone 3: Places
 
-- [ ] `PlaceSearch` interface, then pick a provider (see open questions)
-- [ ] Check-in composer, JSON h-entry with `checkin` h-card
-- [ ] Check-in history (`q=source`, filtered), map thumbnails
-- [ ] Check-in publish delay setting
-- [ ] Swipe to delete check-ins
+- [x] Place search on OpenStreetMap through Photon (komoot): nearby places within 1 km, live search within 10 km
+- [x] Check-in composer, JSON h-entry with `checkin` h-card (same as iOS, `maps.apple.com` link)
+- [x] Check-in history (`q=source`, paged up to 500, filtered), OSM tile thumbnails
+- [x] Check-in publish delay setting, and a separate check-in blog
+- [x] Delete check-ins (long-press menu, the Android idiom for iOS swipe-to-delete)
+
+Verified on the Pixel 7 emulator: the Places tab, the location permission prompt, nearby places (Portland GPS fix), live search, place selection, and the timeout error state. Not yet tried on a device: posting a real check-in, history rows with thumbnails, and deleting a check-in.
 
 ## Milestone 4: Android system integration
 
@@ -61,10 +63,11 @@ Verified on the Pixel 7 emulator while signed in: the compose button and its lon
 - **iOS alt text bug.** iOS Snippets drops empty `mp-photo-alt[]` values, so alt text shifts onto the wrong photos when some are blank. Android sends aligned arrays. Worth fixing in Snippets.
 - **Predictive back.** It is disabled because enabling it made back presses skip React Navigation on RN 0.86. Try again after the next RN or react-native-screens upgrade.
 - **Timeline offline cache.** iOS keeps no disk cache. inkwell caches its timeline as JSON. Is that worth adding?
-- **Places provider.** Foursquare, Google Places or OpenStreetMap. To decide at M3. Map thumbnails depend on the same choice.
+- **OSM fair use.** Places use the public Photon (photon.komoot.io) and OSM tile servers, with an identifying User-Agent and attribution. If Sunlit grows, move to a hosted OSM provider or a Micro.blog-run Photon. The public Overpass servers were overloaded in testing (all mirrors 502 or timing out), which is why Photon was chosen.
 - **IndieAuth client_id.** `https://sunlit.io/` is assumed. Check that the Micro.blog consent screen shows "Sunlit" nicely (sunlit.io may need h-app markup or a `client.json`).
 - **Push.** The Micro.blog server needs to accept FCM tokens for `app_name=Sunlit`. A Sunlit Firebase project and `google-services.json` are needed.
 - **Bookmarks list.** iOS has an unreachable `BookmarksViewController`. Should Android expose a bookmarks screen?
 - **Widget.** Pick an approach for a React Native widget (e.g. `react-native-android-widget`) or write it natively in Kotlin.
 - **Release signing.** Keystore and Play Console listing for `blog.micro.sunlit`.
+- **Privacy disclosure.** Nearby lookups and place searches send coordinates to komoot's Photon (photon.komoot.io), and tiles come from tile.openstreetmap.org. The Play Data safety form and the Sunlit privacy policy need to say so. The user's own fix is never posted, only the chosen venue.
 - **External blog credentials.** iOS keeps per-blog tokens and XML-RPC passwords in UserDefaults. Android will use SecureStore. Confirm there is no need to migrate anything.

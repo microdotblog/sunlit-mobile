@@ -35,6 +35,9 @@ const ICONS = {
   expand: { android: 'expand-more', ios: 'chevron.down' },
   video: { android: 'videocam', ios: 'video.fill' },
   uploads: { android: 'cloud-upload', ios: 'icloud.and.arrow.up' },
+  add_location: { android: 'add-location-alt', ios: 'mappin.and.ellipse' },
+  my_location: { android: 'my-location', ios: 'location' },
+  schedule: { android: 'schedule', ios: 'clock' },
 };
 
 export default function Icon({ name, size = 24, color }) {

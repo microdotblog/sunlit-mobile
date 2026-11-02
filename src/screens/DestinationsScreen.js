@@ -8,9 +8,14 @@ import AppStore from '../stores/App';
 import Destinations from '../stores/Destinations';
 import { use_theme } from '../theme/theme';
 
-function DestinationsScreen({ navigation }) {
+function DestinationsScreen({ navigation, route }) {
   const theme = use_theme();
-  const selected = Destinations.selected();
+  const is_for_check_ins = route.params?.purpose === 'check_ins';
+  const selected = is_for_check_ins ? Destinations.selected_for_check_ins() : Destinations.selected();
+
+  React.useLayoutEffect(() => {
+    navigation.setOptions({ title: is_for_check_ins ? 'Check in to' : 'Post to' });
+  }, [navigation, is_for_check_ins]);
 
   React.useEffect(() => {
     Destinations.refresh();
@@ -18,7 +23,11 @@ function DestinationsScreen({ navigation }) {
 
   async function choose(uid) {
     try {
-      await Destinations.select(uid);
+      if (is_for_check_ins) {
+        await Destinations.select_for_check_ins(uid);
+      } else {
+        await Destinations.select(uid);
+      }
     } catch (error) {
       AppStore.show_toast('Could not save your choice');
     }

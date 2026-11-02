@@ -50,6 +50,19 @@ export function delete_post({ token, url, destination_uid = null }) {
   });
 }
 
+export async function fetch_source({ token, destination_uid = null, offset = 0, limit = 100 }) {
+  const payload = await request_json(MICROPUB_PATH, {
+    token,
+    query: { q: 'source', limit, offset, 'mp-destination': destination_uid },
+  });
+
+  if (Array.isArray(payload?.items)) {
+    return payload.items;
+  } else {
+    return [];
+  }
+}
+
 export async function fetch_uploads({ token, media_endpoint = MICROPUB_MEDIA_PATH, destination_uid = null }) {
   const payload = await request_json(media_endpoint, {
     token,

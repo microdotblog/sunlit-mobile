@@ -5,6 +5,8 @@ import { observer } from 'mobx-react';
 
 import Icon from '../platform/Icon';
 import AltTextScreen from '../screens/AltTextScreen';
+import CheckInDelayScreen from '../screens/CheckInDelayScreen';
+import CheckInScreen from '../screens/CheckInScreen';
 import ComposerScreen from '../screens/ComposerScreen';
 import ConversationScreen from '../screens/ConversationScreen';
 import DestinationsScreen from '../screens/DestinationsScreen';
@@ -12,6 +14,7 @@ import DiscoverScreen from '../screens/DiscoverScreen';
 import FollowingScreen from '../screens/FollowingScreen';
 import ImageViewerScreen from '../screens/ImageViewerScreen';
 import MentionsScreen from '../screens/MentionsScreen';
+import PlacesScreen from '../screens/PlacesScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import TimelineScreen from '../screens/TimelineScreen';
@@ -50,6 +53,13 @@ const Home = observer(function Home() {
           options={{ tabBarIcon: ({ color }) => <Icon color={color} name="mentions" size={24} /> }}
         />
       ) : null}
+      {is_signed_in ? (
+        <Tabs.Screen
+          component={PlacesScreen}
+          name="Places"
+          options={{ tabBarIcon: ({ color }) => <Icon color={color} name="places" size={24} /> }}
+        />
+      ) : null}
       <Tabs.Screen
         component={DiscoverScreen}
         name="Discover"
@@ -86,6 +96,16 @@ function RootNavigator() {
         })}
       />
       <Stack.Screen component={AltTextScreen} name="AltText" options={{ presentation: 'modal', title: 'Description' }} />
+      <Stack.Screen
+        component={CheckInScreen}
+        name="CheckIn"
+        options={({ navigation }) => ({
+          headerLeft: () => <HeaderIconButton icon="close" label="Close" on_press={() => navigation.goBack()} />,
+          presentation: 'fullScreenModal',
+          title: 'New check-in',
+        })}
+      />
+      <Stack.Screen component={CheckInDelayScreen} name="CheckInDelay" options={{ presentation: 'modal', title: 'Schedule check-ins' }} />
       <Stack.Screen component={DestinationsScreen} name="Destinations" options={{ presentation: 'modal', title: 'Post to' }} />
       <Stack.Screen component={UploadsScreen} name="Uploads" options={{ title: 'Micro.blog uploads' }} />
       <Stack.Screen

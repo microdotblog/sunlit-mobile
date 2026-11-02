@@ -7,6 +7,7 @@ import Avatar from '../components/Avatar';
 import { open_in_browser } from '../navigation/links';
 import Auth from '../stores/Auth';
 import Destinations from '../stores/Destinations';
+import Places from '../stores/Places';
 import Session from '../stores/Session';
 import { use_theme } from '../theme/theme';
 
@@ -17,6 +18,7 @@ function SettingsScreen({ navigation }) {
   const theme = use_theme();
   const version = `${Application.nativeApplicationVersion || ''} (${Application.nativeBuildVersion || ''})`;
   const destination = Destinations.selected();
+  const check_in_destination = Destinations.selected_for_check_ins();
 
   React.useEffect(() => {
     Destinations.load();
@@ -50,6 +52,17 @@ function SettingsScreen({ navigation }) {
         label="Publish new posts to"
         on_press={Destinations.has_choice() ? () => navigation.navigate('Destinations') : undefined}
         value={destination ? destination.name : ''}
+      />
+      <SectionLabel title="Check-ins" />
+      <SettingsRow
+        label="Check in to"
+        on_press={Destinations.has_choice() ? () => navigation.navigate('Destinations', { purpose: 'check_ins' }) : undefined}
+        value={check_in_destination ? check_in_destination.name : ''}
+      />
+      <SettingsRow
+        label="Schedule check-ins"
+        on_press={() => navigation.navigate('CheckInDelay')}
+        value={Places.delay().title}
       />
       <SectionLabel title="About" />
       <SettingsRow label="Sunlit website" on_press={() => open_in_browser(CREDITS_URL)} />

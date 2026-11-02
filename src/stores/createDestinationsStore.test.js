@@ -35,8 +35,21 @@ describe('create_destinations_store', () => {
 
     await store.select('https://photos.vincent.blog/');
 
-    expect(storage.save).toHaveBeenCalledWith({ destination_uid: 'https://photos.vincent.blog/' });
+    expect(storage.save).toHaveBeenCalledWith({ destination_uid: 'https://photos.vincent.blog/', check_in_uid: null });
     expect(store.selected().name).toBe('photos.vincent.blog');
+  });
+
+  it('keeps a separate blog for check-ins that follows posts until chosen', async () => {
+    const { storage, store } = build_store();
+    await store.load();
+
+    expect(store.selected_for_check_ins().uid).toBe('https://vincent.blog/');
+
+    await store.select_for_check_ins('https://photos.vincent.blog/');
+
+    expect(store.selected_for_check_ins().uid).toBe('https://photos.vincent.blog/');
+    expect(store.selected().uid).toBe('https://vincent.blog/');
+    expect(storage.save).toHaveBeenLastCalledWith({ destination_uid: null, check_in_uid: 'https://photos.vincent.blog/' });
   });
 
   it('restores the chosen blog on launch', async () => {

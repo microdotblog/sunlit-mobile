@@ -14,6 +14,7 @@ export function create_destinations_store({ api, get_token, storage, on_auth_err
       destinations: types.array(Destination),
       media_endpoint: types.maybeNull(types.string),
       selected_uid: types.maybeNull(types.string),
+      check_in_uid: types.maybeNull(types.string),
       is_loading: types.optional(types.boolean, false),
       did_load: types.optional(types.boolean, false),
       error_message: types.maybeNull(types.string),
@@ -26,6 +27,7 @@ export function create_destinations_store({ api, get_token, storage, on_auth_err
       hydrate: flow(function* () {
         const preferences = yield storage.load();
         self.selected_uid = preferences?.destination_uid || null;
+        self.check_in_uid = preferences?.check_in_uid || null;
       }),
 
       load() {
@@ -80,14 +82,23 @@ export function create_destinations_store({ api, get_token, storage, on_auth_err
 
       select: flow(function* (uid) {
         self.selected_uid = uid;
-        yield storage.save({ destination_uid: uid });
+        yield self.persist();
+      }),
+
+      select_for_check_ins: flow(function* (uid) {
+        self.check_in_uid = uid;
+        yield self.persist();
+      }),
+
+      persist: flow(function* () {
+        yield storage.save({ destination_uid: self.selected_uid, check_in_uid: self.check_in_uid });
       }),
 
       reset() {
         self.generation += 1;
         self.loading = null;
         applySnapshot(self, {});
-        storage.save({ destination_uid: null }).catch(error => {
+        storage.save({ destination_uid: null, check_in_uid: null }).catch(error => {
           console.error('Could not clear the publishing blog.', error);
         });
       },
@@ -101,6 +112,16 @@ export function create_destinations_store({ api, get_token, storage, on_auth_err
         }
 
         return self.destinations.find(destination => destination.is_default) || self.destinations[0] || null;
+      },
+
+      selected_for_check_ins() {
+        const remembered = self.destinations.find(destination => destination.uid === self.check_in_uid);
+
+        if (remembered) {
+          return remembered;
+        } else {
+          return self.selected();
+        }
       },
 
       has_choice() {
