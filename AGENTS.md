@@ -26,15 +26,20 @@ For Expo documentation and how-tos, see https://docs.expo.dev/llms.txt.
   - `Posts` keeps one map of posts plus keyed lists: `timeline`, `discover`, `mentions`, `photos:<username>`, `conversation:<id>`. A change to a post, such as a bookmark, therefore shows up in every list.
   - `Users` holds profiles, follow state, following lists, and search.
   - `Session` resets every store when a 401 or 403 arrives through `sessionEvents`.
+  - `Composer` (`create_composer_store`) holds the sections and media and does upload-then-post, with at most 4 uploads at once and a generation counter so a cancelled post can't finish later. The payloads come from `models/composition.js`. One section is a Micropub form (`photo[]`, `mp-photo-alt[]`), several sections are a JSON h-entry with iOS `HTMLBuilder` markup. `mediaPreparation.js` resizes images (shorter side 1800 px, JPEG 0.7) and transcodes video (640 px, 3 Mbps).
+  - `Destinations` reads `micropub?q=config` and remembers the chosen blog, falling back to `microblog-default`. `Uploads` reads `micropub/media?q=source`.
 - `src/stores/models/`: `Post` and `User` models, plus `postContent.js`, which parses `content_html` into media and styled paragraphs (matching iOS `SunlitPost`).
 - `src/platform/`: `Icon` and `ContextMenu`.
 - `src/navigation/`: a root native stack with bottom tabs inside it. Deep links are `sunlit://show?id=` and `sunlit://notification`.
+- `plugins/`: local Expo config plugins (release signing from env, and `allowBackup` kept false when libraries such as the compressor ask for true). Always run `bunx expo prebuild --platform android --no-install` without `--clean`, and check `git diff android` afterwards.
 
 ## Android gotchas
 
 - **Rounded views (RN 0.86).** On Android, never toggle a rounded view's background to `'transparent'`. Fabric flattens it and then loses `borderRadius` when it un-flattens (facebook/react-native#52415). Use an opaque colour such as `theme.colors.canvas` for the idle state.
 - **Predictive back.** It stays off: with `enableOnBackInvokedCallback="true"`, back presses skip React Navigation and send the app to the background.
 - **Images.** Grids and thumbnails load through the Micro.blog resizer (`resized_image_url`). Carousels and the viewer use originals.
+- **Context menus.** On Android, `ContextMenu` wraps its children in a `collapsable={false}` view. Without it, Fabric flattens layout-only children into the `PopupMenuAndroid` container, and absolutely positioned overlays end up at its origin.
+- **Metro.** Never start it with `CI=1` while testing on a device. CI mode turns off file watching, so the device keeps running a stale bundle.
 - **Post media.** It is frozen plain data. Do not turn it into nested models, because re-fetching a post would leave components holding dead nodes.
 
 ## Commands

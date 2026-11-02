@@ -26,6 +26,7 @@ function build_store(api_overrides = {}) {
     add_bookmark: mock(async () => null),
     remove_bookmark: mock(async () => null),
     send_reply: mock(async () => null),
+    delete_post: mock(async () => null),
     ...api_overrides,
   };
   const on_auth_error = mock(() => {});
@@ -201,6 +202,22 @@ describe('create_posts_store', () => {
 
     expect(media[0].url).toBe('https://example.com/3.jpg');
     expect(store.get_post('3').media[0].url).toBe('https://example.com/3.jpg');
+  });
+
+  it('deletes a post by its URL and drops it from every list', async () => {
+    const { api, store } = build_store({ fetch_discover: mock(async () => ({ items: [item(2, { url: 'https://vincent.blog/2.html' })] })) });
+    await store.refresh('timeline');
+    await store.refresh('discover');
+
+    await store.delete_post('2', 'https://vincent.blog/');
+
+    expect(api.delete_post).toHaveBeenCalledWith({
+      token: 'token-1',
+      url: 'https://vincent.blog/2.html',
+      destination_uid: 'https://vincent.blog/',
+    });
+    expect(ids(store.get_list('timeline'))).toEqual(['3', '1']);
+    expect(ids(store.get_list('discover'))).toEqual([]);
   });
 
   it('sends a reply and reloads the conversation', async () => {

@@ -24,14 +24,16 @@ Verified on the Pixel 7 emulator while signed out: Discover (grid, list), conver
 
 ## Milestone 2: Composer
 
-- [ ] Multi-section composer (text plus photos), title when there is more than one section
-- [ ] Photo picker, reorder, crop, alt text
-- [ ] Micropub config (`q=config`), destination picker
-- [ ] Media upload (`/micropub/media`), at most 4 in parallel
-- [ ] Video transcoding to H.264 at 640px max (library to choose)
-- [ ] "Micro.blog Uploads" picker (`/micropub/media?q=source`)
-- [ ] Post as `postText` (one section on Micropub) or HTML (`sunlit_image`)
-- [ ] Delete own posts
+- [x] Multi-section composer (text plus photos), title when there is more than one section
+- [x] Photo picker, reorder, crop, alt text
+- [x] Micropub config (`q=config`), destination picker
+- [x] Media upload (`/micropub/media`), at most 4 in parallel
+- [x] Video transcoding to H.264 at 640px max, 3 Mbps (react-native-compressor)
+- [x] "Micro.blog Uploads" picker (`/micropub/media?q=source`)
+- [x] Post as `postText` (one section on Micropub) or HTML (`sunlit_image`)
+- [x] Delete own posts
+
+Verified on the Pixel 7 emulator while signed in: the compose button and its long-press menu, the system photo picker, the composer with real destinations, crop (uCrop), alt text, the blog chooser, discarding (close and back), and the Uploads browser. Not yet tried on a device: actually publishing (it posts to a real blog), video transcoding and upload, and deleting a post. The builders and stores have unit tests matched to iOS `HTMLBuilder` and Snippets.
 
 ## Milestone 3: Places
 
@@ -55,7 +57,8 @@ Verified on the Pixel 7 emulator while signed out: Discover (grid, list), conver
 
 ## Open questions
 
-- **Signed-in check on a device.** Sign in with a real account (IndieAuth or an app token) and walk through Timeline, Mentions, replies, bookmarks, follow and search.
+- **Publishing on a device.** Make a real test post (one section, then several sections with a title, then a video) to a test blog, and delete it from the app.
+- **iOS alt text bug.** iOS Snippets drops empty `mp-photo-alt[]` values, so alt text shifts onto the wrong photos when some are blank. Android sends aligned arrays. Worth fixing in Snippets.
 - **Predictive back.** It is disabled because enabling it made back presses skip React Navigation on RN 0.86. Try again after the next RN or react-native-screens upgrade.
 - **Timeline offline cache.** iOS keeps no disk cache. inkwell caches its timeline as JSON. Is that worth adding?
 - **Places provider.** Foursquare, Google Places or OpenStreetMap. To decide at M3. Map thumbnails depend on the same choice.
@@ -63,6 +66,5 @@ Verified on the Pixel 7 emulator while signed out: Discover (grid, list), conver
 - **Push.** The Micro.blog server needs to accept FCM tokens for `app_name=Sunlit`. A Sunlit Firebase project and `google-services.json` are needed.
 - **Bookmarks list.** iOS has an unreachable `BookmarksViewController`. Should Android expose a bookmarks screen?
 - **Widget.** Pick an approach for a React Native widget (e.g. `react-native-android-widget`) or write it natively in Kotlin.
-- **Video transcoding.** Pick a library: `react-native-compressor` or a Media3 Transformer native module.
 - **Release signing.** Keystore and Play Console listing for `blog.micro.sunlit`.
 - **External blog credentials.** iOS keeps per-blog tokens and XML-RPC passwords in UserDefaults. Android will use SecureStore. Confirm there is no need to migrate anything.

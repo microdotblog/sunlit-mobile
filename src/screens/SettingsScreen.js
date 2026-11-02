@@ -6,6 +6,7 @@ import { observer } from 'mobx-react';
 import Avatar from '../components/Avatar';
 import { open_in_browser } from '../navigation/links';
 import Auth from '../stores/Auth';
+import Destinations from '../stores/Destinations';
 import Session from '../stores/Session';
 import { use_theme } from '../theme/theme';
 
@@ -15,6 +16,11 @@ const HELP_URL = 'https://help.micro.blog/';
 function SettingsScreen({ navigation }) {
   const theme = use_theme();
   const version = `${Application.nativeApplicationVersion || ''} (${Application.nativeBuildVersion || ''})`;
+  const destination = Destinations.selected();
+
+  React.useEffect(() => {
+    Destinations.load();
+  }, []);
 
   function confirm_sign_out() {
     Alert.alert('Sign out of Micro.blog?', 'You can sign back in at any time.', [
@@ -39,6 +45,12 @@ function SettingsScreen({ navigation }) {
           <Text style={[styles.account_username, { color: theme.colors.ink_soft }]}>@{Auth.profile_username}</Text>
         </View>
       </View>
+      <SectionLabel title="Publishing" />
+      <SettingsRow
+        label="Publish new posts to"
+        on_press={Destinations.has_choice() ? () => navigation.navigate('Destinations') : undefined}
+        value={destination ? destination.name : ''}
+      />
       <SectionLabel title="About" />
       <SettingsRow label="Sunlit website" on_press={() => open_in_browser(CREDITS_URL)} />
       <SettingsRow label="Micro.blog help" on_press={() => open_in_browser(HELP_URL)} />

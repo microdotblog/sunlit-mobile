@@ -28,6 +28,13 @@ const ICONS = {
   more: { android: 'more-vert', ios: 'ellipsis' },
   check: { android: 'check', ios: 'checkmark' },
   compose: { android: 'add-a-photo', ios: 'square.and.pencil' },
+  add_photo: { android: 'add-photo-alternate', ios: 'photo.badge.plus' },
+  crop: { android: 'crop', ios: 'crop' },
+  delete: { android: 'delete-outline', ios: 'trash' },
+  description: { android: 'notes', ios: 'text.bubble' },
+  expand: { android: 'expand-more', ios: 'chevron.down' },
+  video: { android: 'videocam', ios: 'video.fill' },
+  uploads: { android: 'cloud-upload', ios: 'icloud.and.arrow.up' },
 };
 
 export default function Icon({ name, size = 24, color }) {

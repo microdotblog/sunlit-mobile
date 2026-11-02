@@ -2,6 +2,7 @@ import { Platform, ToastAndroid } from 'react-native';
 import { flow, types } from 'mobx-state-tree';
 
 import Auth from './Auth';
+import Destinations from './Destinations';
 import ReplyDrafts from './ReplyDrafts';
 import Session from './Session';
 
@@ -29,6 +30,7 @@ const AppStore = types
 
       try {
         yield ReplyDrafts.hydrate();
+        yield Destinations.hydrate();
         yield Auth.hydrate();
 
         if (!Auth.is_signed_in()) {

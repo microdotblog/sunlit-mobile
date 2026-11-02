@@ -4,7 +4,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { observer } from 'mobx-react';
 
 import Icon from '../platform/Icon';
+import AltTextScreen from '../screens/AltTextScreen';
+import ComposerScreen from '../screens/ComposerScreen';
 import ConversationScreen from '../screens/ConversationScreen';
+import DestinationsScreen from '../screens/DestinationsScreen';
 import DiscoverScreen from '../screens/DiscoverScreen';
 import FollowingScreen from '../screens/FollowingScreen';
 import ImageViewerScreen from '../screens/ImageViewerScreen';
@@ -12,9 +15,10 @@ import MentionsScreen from '../screens/MentionsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import TimelineScreen from '../screens/TimelineScreen';
+import UploadsScreen from '../screens/UploadsScreen';
 import Auth from '../stores/Auth';
 import { use_theme } from '../theme/theme';
-import { AccountButton } from './headers';
+import { AccountButton, HeaderIconButton } from './headers';
 import TabBar from './TabBar';
 
 const Stack = createNativeStackNavigator();
@@ -72,6 +76,18 @@ function RootNavigator() {
       <Stack.Screen component={ProfileScreen} name="Profile" />
       <Stack.Screen component={FollowingScreen} name="Following" options={{ title: 'Following' }} />
       <Stack.Screen component={SettingsScreen} name="Settings" />
+      <Stack.Screen
+        component={ComposerScreen}
+        name="Composer"
+        options={({ navigation }) => ({
+          headerLeft: () => <HeaderIconButton icon="close" label="Close" on_press={() => navigation.goBack()} />,
+          presentation: 'fullScreenModal',
+          title: 'New post',
+        })}
+      />
+      <Stack.Screen component={AltTextScreen} name="AltText" options={{ presentation: 'modal', title: 'Description' }} />
+      <Stack.Screen component={DestinationsScreen} name="Destinations" options={{ presentation: 'modal', title: 'Post to' }} />
+      <Stack.Screen component={UploadsScreen} name="Uploads" options={{ title: 'Micro.blog uploads' }} />
       <Stack.Screen
         component={ImageViewerScreen}
         name="ImageViewer"

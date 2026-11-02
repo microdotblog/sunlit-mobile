@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
 import { MenuView } from '@react-native-menu/menu';
 import PopupMenuAndroid from '@react-native/popup-menu-android';
 
@@ -34,7 +34,7 @@ export default function ContextMenu({ actions = [], on_action, open_on_long_pres
         onDismiss={() => {}}
         onSelectionChange={handle_android_selection}
       >
-        {children({ open_menu: open_android_menu })}
+        <View collapsable={false}>{children({ open_menu: open_android_menu })}</View>
       </PopupMenuAndroid>
     );
   }

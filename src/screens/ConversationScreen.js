@@ -59,7 +59,7 @@ const Conversation = observer(function Conversation({ id, navigation }) {
       headerRight: () => (
         <ContextMenu
           actions={actions}
-          on_action={action_id => perform_post_action(navigation, hero_post, action_id)}
+          on_action={action_id => perform_post_action(navigation, hero_post, action_id, { on_deleted: () => navigation.goBack() })}
           open_on_long_press={false}
         >
           {({ open_menu }) => <HeaderIconButton icon="more" label="More options" on_press={open_menu} />}

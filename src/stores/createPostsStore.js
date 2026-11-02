@@ -203,6 +203,24 @@ export function create_posts_store({ api, get_token, on_auth_error = () => {} } 
         }
       }),
 
+      delete_post: flow(function* (id, destination_uid = null) {
+        const post = self.posts.get(id);
+
+        if (!post) {
+          return false;
+        }
+
+        try {
+          yield api.delete_post({ token: get_token(), url: post.url, destination_uid });
+        } catch (error) {
+          yield handle_error(error);
+          throw error;
+        }
+
+        self.posts.delete(id);
+        return true;
+      }),
+
       send_reply: flow(function* (id, text) {
         const trimmed_text = `${text || ''}`.trim();
 

@@ -1,7 +1,10 @@
 import Auth from './Auth';
+import Composer from './Composer';
 import { SESSION_EXPIRED_MESSAGE } from './createAuthStore';
+import Destinations from './Destinations';
 import Posts from './Posts';
 import ReplyDrafts from './ReplyDrafts';
+import Uploads from './Uploads';
 import Users from './Users';
 import { on_session_expired } from './sessionEvents';
 
@@ -41,9 +44,12 @@ const Session = {
 };
 
 function reset_stores() {
+  Composer.reset();
+  Destinations.reset();
   Posts.reset();
   Users.reset();
   ReplyDrafts.reset();
+  Uploads.reset();
 }
 
 export default Session;

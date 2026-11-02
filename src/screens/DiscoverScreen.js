@@ -4,6 +4,7 @@ import { useScrollToTop } from '@react-navigation/native';
 import { observer } from 'mobx-react';
 
 import { LoadingFooter, LoadingState, MessageState } from '../components/ListStates';
+import ComposeButton from '../components/ComposeButton';
 import { grid_layout } from '../components/PhotoGrid';
 import PhotoTile from '../components/PhotoTile';
 import TimelineCard from '../components/TimelineCard';
@@ -106,28 +107,31 @@ function DiscoverScreen({ navigation }) {
   }
 
   return (
-    <FlatList
-      ListFooterComponent={<LoadingFooter is_loading={list.is_loading_more} />}
-      columnWrapperStyle={is_grid ? styles.grid_row : undefined}
-      contentContainerStyle={is_grid ? styles.grid : null}
-      data={posts}
-      key={is_grid ? `grid-${columns}` : 'list'}
-      keyExtractor={item => item.id}
-      numColumns={is_grid ? columns : 1}
-      onEndReached={() => Posts.load_more(DISCOVER_KEY)}
-      onEndReachedThreshold={1.5}
-      ref={list_ref}
-      refreshControl={
-        <RefreshControl
-          colors={[theme.colors.accent]}
-          onRefresh={() => Posts.refresh(DISCOVER_KEY)}
-          progressBackgroundColor={theme.colors.canvas}
-          refreshing={list.is_refreshing}
-        />
-      }
-      renderItem={render_item}
-      style={{ backgroundColor: theme.colors.canvas }}
-    />
+    <View style={styles.screen}>
+      <FlatList
+        ListFooterComponent={<LoadingFooter is_loading={list.is_loading_more} />}
+        columnWrapperStyle={is_grid ? styles.grid_row : undefined}
+        contentContainerStyle={is_grid ? styles.grid : null}
+        data={posts}
+        key={is_grid ? `grid-${columns}` : 'list'}
+        keyExtractor={item => item.id}
+        numColumns={is_grid ? columns : 1}
+        onEndReached={() => Posts.load_more(DISCOVER_KEY)}
+        onEndReachedThreshold={1.5}
+        ref={list_ref}
+        refreshControl={
+          <RefreshControl
+            colors={[theme.colors.accent]}
+            onRefresh={() => Posts.refresh(DISCOVER_KEY)}
+            progressBackgroundColor={theme.colors.canvas}
+            refreshing={list.is_refreshing}
+          />
+        }
+        renderItem={render_item}
+        style={{ backgroundColor: theme.colors.canvas }}
+      />
+      <ComposeButton navigation={navigation} />
+    </View>
   );
 }
 
@@ -188,6 +192,9 @@ const SearchResults = observer(function SearchResults({ navigation, query, on_ch
 });
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
   header_actions: {
     alignItems: 'center',
     flexDirection: 'row',

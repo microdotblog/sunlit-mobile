@@ -4,6 +4,7 @@ import { useScrollToTop } from '@react-navigation/native';
 import { observer } from 'mobx-react';
 
 import { LoadingFooter, LoadingState, MessageState } from '../components/ListStates';
+import ComposeButton from '../components/ComposeButton';
 import TimelineCard from '../components/TimelineCard';
 import { use_post_list } from '../components/usePostList';
 import WelcomeView from '../components/WelcomeView';
@@ -68,38 +69,44 @@ function TimelineScreen({ navigation }) {
   }
 
   return (
-    <FlatList
-      ListEmptyComponent={
-        <MessageState
-          action_title="Open Discover"
-          message="Follow photographers from Discover and their photos will show up here."
-          on_action={() => navigation.navigate('Discover')}
-          title="No photos yet"
-        />
-      }
-      ListFooterComponent={render_footer}
-      contentContainerStyle={posts.length === 0 ? styles.empty : null}
-      data={posts}
-      keyExtractor={item => item.id}
-      onEndReached={() => Posts.load_more(TIMELINE_KEY)}
-      onEndReachedThreshold={1.5}
-      ref={list_ref}
-      refreshControl={
-        <RefreshControl
-          colors={[theme.colors.accent]}
-          onRefresh={() => Posts.refresh(TIMELINE_KEY)}
-          progressBackgroundColor={theme.colors.canvas}
-          refreshing={list.is_refreshing}
-        />
-      }
-      renderItem={render_item}
-      style={{ backgroundColor: theme.colors.canvas }}
-      windowSize={7}
-    />
+    <View style={styles.screen}>
+      <FlatList
+        ListEmptyComponent={
+          <MessageState
+            action_title="Open Discover"
+            message="Follow photographers from Discover and their photos will show up here."
+            on_action={() => navigation.navigate('Discover')}
+            title="No photos yet"
+          />
+        }
+        ListFooterComponent={render_footer}
+        contentContainerStyle={posts.length === 0 ? styles.empty : null}
+        data={posts}
+        keyExtractor={item => item.id}
+        onEndReached={() => Posts.load_more(TIMELINE_KEY)}
+        onEndReachedThreshold={1.5}
+        ref={list_ref}
+        refreshControl={
+          <RefreshControl
+            colors={[theme.colors.accent]}
+            onRefresh={() => Posts.refresh(TIMELINE_KEY)}
+            progressBackgroundColor={theme.colors.canvas}
+            refreshing={list.is_refreshing}
+          />
+        }
+        renderItem={render_item}
+        style={{ backgroundColor: theme.colors.canvas }}
+        windowSize={7}
+      />
+      <ComposeButton navigation={navigation} />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
   empty: {
     flexGrow: 1,
   },

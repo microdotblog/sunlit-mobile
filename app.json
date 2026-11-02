@@ -18,7 +18,16 @@
             "deploymentTarget": "16.4"
           }
         }
-      ]
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ],
+      "./plugins/withReleaseSigning",
+      "./plugins/withBackupDisabled"
     ],
     "android": {
       "package": "blog.micro.sunlit",
@@ -26,7 +35,10 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/app-icon.png",
         "backgroundColor": "#FFFDE8"
-      }
+      },
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "ios": {
       "bundleIdentifier": "blog.micro.sunlit",
