@@ -8,7 +8,7 @@ const Destination = types.model('Destination', {
   is_default: types.optional(types.boolean, false),
 });
 
-export function create_destinations_store({ api, get_token, storage, on_auth_error = () => {} } = {}) {
+export function create_destinations_store({ api, get_token, storage, external_blogs = { blogs: [] }, on_auth_error = () => {} } = {}) {
   return types
     .model('Destinations', {
       destinations: types.array(Destination),
@@ -114,21 +114,53 @@ export function create_destinations_store({ api, get_token, storage, on_auth_err
         return self.destinations.find(destination => destination.is_default) || self.destinations[0] || null;
       },
 
-      selected_for_check_ins() {
-        const remembered = self.destinations.find(destination => destination.uid === self.check_in_uid);
+      targets() {
+        const microblog_targets = self.destinations.map(destination => ({
+          key: destination.uid,
+          name: destination.name,
+          kind: 'microblog',
+          uid: destination.uid,
+        }));
+        const external_targets = external_blogs.blogs.map(blog => ({
+          key: `external:${blog.id}`,
+          name: blog.name,
+          kind: blog.kind,
+          blog_id: blog.id,
+        }));
+
+        return [...microblog_targets, ...external_targets];
+      },
+
+      check_in_targets() {
+        return self.targets().filter(target => target.kind !== 'xmlrpc');
+      },
+
+      selected_target() {
+        return self.targets().find(target => target.key === self.selected_uid) || default_target(self.selected());
+      },
+
+      selected_check_in_target() {
+        const remembered = self.check_in_targets().find(target => target.key === self.check_in_uid);
+        const posting = self.selected_target();
 
         if (remembered) {
           return remembered;
+        } else if (posting && posting.kind !== 'xmlrpc') {
+          return posting;
         } else {
-          return self.selected();
+          return default_target(self.selected());
         }
-      },
-
-      has_choice() {
-        return self.destinations.length > 1;
       },
     }))
     .create();
+}
+
+function default_target(destination) {
+  if (!destination) {
+    return null;
+  }
+
+  return { key: destination.uid, name: destination.name, kind: 'microblog', uid: destination.uid };
 }
 
 function normalize_destinations(destinations) {

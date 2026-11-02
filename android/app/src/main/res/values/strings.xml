@@ -1,4 +1,5 @@
 <resources>
   <string name="app_name">Sunlit</string>
   <string name="expo_system_ui_user_interface_style" translatable="false">automatic</string>
+  <string name="widget_sunlitphotos_description" translatable="false">Photos from your timeline or Discover</string>
 </resources>

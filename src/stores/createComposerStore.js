@@ -1,7 +1,7 @@
 import { applySnapshot, flow, getSnapshot, types } from 'mobx-state-tree';
 
 import { is_auth_error } from '../api/request';
-import { build_html_post, build_micropub_form, uses_micropub_form } from './models/composition';
+import { describe_publish_error } from './publishers';
 
 export const MAX_PARALLEL_UPLOADS = 4;
 const MAX_UPLOAD_PASSES = 2;
@@ -17,10 +17,11 @@ const ComposerMedia = types
     alt: types.optional(types.string, ''),
     remote_url: types.maybeNull(types.string),
     poster_url: types.maybeNull(types.string),
+    uploaded_key: types.maybeNull(types.string),
   })
   .views(self => ({
-    is_uploaded() {
-      return Boolean(self.remote_url);
+    is_uploaded(target_key = null) {
+      return Boolean(self.remote_url) && (!self.uploaded_key || self.uploaded_key === target_key);
     },
 
     preview_uri() {
@@ -39,9 +40,7 @@ const Section = types.model('Section', {
 });
 
 export function create_composer_store({
-  micropub,
-  destinations,
-  get_token,
+  publishing,
   prepare_media,
   make_id,
   on_auth_error = () => {},
@@ -137,9 +136,10 @@ export function create_composer_store({
         media.mime = mime || media.mime;
         media.remote_url = null;
         media.poster_url = null;
+        media.uploaded_key = null;
       },
 
-      mark_uploaded(generation, uploaded, { url, poster }) {
+      mark_uploaded(generation, uploaded, { url, poster }, target_key) {
         if (generation !== self.generation) {
           return;
         }
@@ -149,8 +149,13 @@ export function create_composer_store({
         if (media && media.uri === uploaded.uri) {
           media.remote_url = url;
           media.poster_url = poster || null;
+          media.uploaded_key = target_key;
           self.uploaded_count += 1;
         }
+      },
+
+      set_upload_total(count) {
+        self.upload_total = count;
       },
 
       add_to_upload_total(count) {
@@ -181,42 +186,46 @@ export function create_composer_store({
           return null;
         }
 
-        const pending = self.pending_media();
-        const generation = self.begin_posting(pending.length);
-        const token = get_token();
+        const generation = self.begin_posting(self.all_media().length);
         const is_current = () => generation === self.generation;
+        let publisher = null;
 
         try {
-          yield destinations.load();
+          yield publishing.load();
 
           if (!is_current()) {
             return null;
           }
 
-          if (!destinations.did_load) {
+          if (!publishing.is_ready()) {
             throw new Error('Could not load your blogs. Check your connection and try again.');
           }
 
-          const destination = destinations.selected();
-          const destination_uid = destination ? destination.uid : null;
+          publisher = yield publishing.for_posts();
+
+          if (!publisher) {
+            throw new Error('Choose a blog to post to in Settings.');
+          }
+
+          const target_key = publisher.key;
+
+          if (!publisher.supports_video && self.all_media().some(media => media.kind === 'video' && !media.is_uploaded(target_key))) {
+            throw new Error(`${publisher.name} can’t receive videos from Sunlit. Remove the video or choose another blog.`);
+          }
 
           const upload = async media => {
             const file = await prepare_media(media);
-            const result = await micropub.upload_media({
-              token,
-              media_endpoint: destinations.media_endpoint || undefined,
-              destination_uid,
-              file,
-            });
+            const result = await publisher.upload(file);
 
             if (!result.url) {
               throw new Error('The server did not return a URL for the uploaded media.');
             }
 
-            self.mark_uploaded(generation, media, result);
+            self.mark_uploaded(generation, media, result, target_key);
           };
 
-          let remaining = pending;
+          let remaining = self.pending_media(target_key);
+          self.set_upload_total(remaining.length);
 
           for (let pass = 0; pass < MAX_UPLOAD_PASSES && remaining.length > 0; pass += 1) {
             yield run_with_limit(remaining, MAX_PARALLEL_UPLOADS, is_current, upload);
@@ -225,7 +234,7 @@ export function create_composer_store({
               return null;
             }
 
-            remaining = self.pending_media();
+            remaining = self.pending_media(target_key);
             self.add_to_upload_total(remaining.length);
           }
 
@@ -233,8 +242,7 @@ export function create_composer_store({
             throw new Error('A photo changed while it was uploading. Please try posting again.');
           }
 
-          const payload = self.build_payload(destination_uid);
-          const location = yield micropub.create_post({ token, ...payload });
+          const location = yield publisher.publish(self.post_content());
 
           if (!is_current()) {
             return null;
@@ -243,9 +251,9 @@ export function create_composer_store({
           self.reset();
           return location || '';
         } catch (error) {
-          self.finish_posting(generation, resolve_error_message(error));
+          self.finish_posting(generation, describe_publish_error(error, publisher));
 
-          if (is_auth_error(error)) {
+          if (is_auth_error(error) && publisher?.is_microblog) {
             yield Promise.resolve(on_auth_error(error));
           }
 
@@ -280,9 +288,9 @@ export function create_composer_store({
         return self.sections.flatMap(section => section.media);
       },
 
-      pending_media() {
+      pending_media(target_key = null) {
         return self.all_media()
-          .filter(media => !media.is_uploaded())
+          .filter(media => !media.is_uploaded(target_key))
           .map(media => getSnapshot(media));
       },
 
@@ -302,21 +310,14 @@ export function create_composer_store({
         return self.is_posting && self.uploaded_count >= self.upload_total;
       },
 
-      build_payload(destination_uid) {
+      post_content() {
         const sections = getSnapshot(self.sections);
         const locations = Object.fromEntries(
           self.all_media().map(media => [media.id, { url: media.remote_url, poster: media.poster_url }]),
         );
+        const title = sections.length > 1 ? self.title : '';
 
-        if (uses_micropub_form(sections)) {
-          return {
-            form: build_micropub_form({ section: sections[0], destination_uid, locations }),
-          };
-        } else {
-          return {
-            json: build_html_post({ title: self.title, sections, destination_uid, locations }),
-          };
-        }
+        return { sections, title, locations };
       },
     }))
     .create();
@@ -349,14 +350,4 @@ async function run_with_limit(items, limit, should_continue, worker) {
   });
 
   await Promise.all(runners);
-}
-
-function resolve_error_message(error) {
-  if (is_auth_error(error)) {
-    return 'Your Micro.blog session expired. Please sign in again.';
-  } else if (error?.status) {
-    return `Micro.blog could not publish this post (${error.status}).`;
-  } else {
-    return error?.message || 'Could not publish this post. Please try again.';
-  }
 }

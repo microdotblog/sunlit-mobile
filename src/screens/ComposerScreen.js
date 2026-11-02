@@ -226,8 +226,7 @@ const PostButton = observer(function PostButton({ on_post }) {
 const DestinationBar = observer(function DestinationBar({ navigation }) {
   const theme = use_theme();
   const insets = useSafeAreaInsets();
-  const destination = Destinations.selected();
-  const can_choose = Destinations.has_choice();
+  const destination = Destinations.selected_target();
 
   if (!destination) {
     return null;
@@ -236,16 +235,15 @@ const DestinationBar = observer(function DestinationBar({ navigation }) {
   return (
     <View style={[styles.destination_bar, { backgroundColor: theme.colors.canvas, borderTopColor: theme.colors.line, paddingBottom: insets.bottom + 8 }]}>
       <Pressable
-        accessibilityHint={can_choose ? 'Choose another blog' : undefined}
+        accessibilityHint="Choose another blog"
         accessibilityRole="button"
-        disabled={!can_choose}
         onPress={() => navigation.navigate('Destinations')}
         style={[styles.destination_chip, { backgroundColor: theme.colors.surface }]}
       >
         <Text numberOfLines={1} style={[styles.destination_label, { color: theme.colors.ink }]}>
           Posting to {destination.name}
         </Text>
-        {can_choose ? <Icon color={theme.colors.ink_soft} name="expand" size={20} /> : null}
+        <Icon color={theme.colors.ink_soft} name="expand" size={20} />
       </Pressable>
     </View>
   );

@@ -1,6 +1,7 @@
 import { describe, expect, it, mock } from 'bun:test';
 
 import { create_composer_store, MAX_PARALLEL_UPLOADS } from './createComposerStore';
+import { create_publishing } from './publishers';
 
 function photo(name, extra = {}) {
   return { kind: 'image', uri: `file:///${name}.jpg`, width: 1200, height: 800, mime: 'image/jpeg', ...extra };
@@ -17,21 +18,29 @@ function build_store(overrides = {}) {
     did_load: true,
     load: mock(async () => {}),
     media_endpoint: 'https://micro.blog/micropub/media',
-    selected: () => ({ uid: 'https://vincent.blog/', name: 'vincent.blog' }),
+    selected_target: () => ({ key: 'https://vincent.blog/', kind: 'microblog', uid: 'https://vincent.blog/', name: 'vincent.blog' }),
+    selected_check_in_target: () => null,
     ...overrides.destinations,
   };
+  const publishing = create_publishing({
+    micropub,
+    xmlrpc: overrides.xmlrpc || {},
+    destinations,
+    external_blogs: overrides.external_blogs || { get_blog: () => null },
+    get_token: () => 'token-1',
+    get_secret: overrides.get_secret || (async () => null),
+    read_base64: async () => 'AAAA',
+  });
   const prepare_media = mock(async media => ({ uri: media.uri, name: media.uri.split('/').pop(), type: 'image/jpeg' }));
   const on_auth_error = mock(() => {});
   const store = create_composer_store({
-    micropub,
-    destinations,
-    get_token: () => 'token-1',
+    publishing,
     prepare_media: overrides.prepare_media || prepare_media,
     make_id: () => `id-${(next_id += 1)}`,
     on_auth_error,
   });
 
-  return { micropub, on_auth_error, prepare_media, store };
+  return { destinations, micropub, on_auth_error, prepare_media, store };
 }
 
 describe('create_composer_store', () => {
@@ -240,7 +249,7 @@ describe('create_composer_store', () => {
 
   it('refuses to post while the blogs could not be loaded', async () => {
     const { micropub, store } = build_store({
-      destinations: { did_load: false, selected: () => null },
+      destinations: { did_load: false, selected_target: () => null },
     });
     store.start([photo('a')]);
 
@@ -261,6 +270,135 @@ describe('create_composer_store', () => {
     await store.post();
 
     expect(micropub.create_post.mock.calls[0][0].form.name).toBeUndefined();
+  });
+
+  it('posts to a WordPress blog over XML-RPC without the Micro.blog token', async () => {
+    const xmlrpc = {
+      new_media_object: mock(async ({ name }) => `https://wp.example/uploads/${name}`),
+      new_post: mock(async () => '42'),
+    };
+    const { micropub, store } = build_store({
+      xmlrpc,
+      destinations: { selected_target: () => ({ key: 'external:wp', kind: 'xmlrpc', blog_id: 'wp', name: 'wp.example' }) },
+      external_blogs: {
+        get_blog: () => ({ id: 'wp', name: 'wp.example', kind: 'xmlrpc', xmlrpc_endpoint: 'https://wp.example/xmlrpc.php', blog_id: '1', username: 'vincent', is_wordpress: true }),
+      },
+      get_secret: async () => ({ password: 'secret' }),
+    });
+    store.start([photo('a')]);
+    store.set_text(store.sections[0].id, 'Hello');
+
+    const location = await store.post();
+
+    expect(location).toBe('42');
+    expect(micropub.upload_media).not.toHaveBeenCalled();
+    expect(micropub.create_post).not.toHaveBeenCalled();
+    expect(xmlrpc.new_media_object.mock.calls[0][0]).toMatchObject({ endpoint: 'https://wp.example/xmlrpc.php', username: 'vincent', password: 'secret', bits: 'AAAA' });
+    expect(xmlrpc.new_post.mock.calls[0][0]).toMatchObject({ is_wordpress: true, title: '' });
+    expect(xmlrpc.new_post.mock.calls[0][0].html).toContain('Hello\n\n<img src="https://wp.example/uploads/a.jpg"');
+  });
+
+  it('posts to an external Micropub blog with its own token and endpoints', async () => {
+    const { micropub, store } = build_store({
+      destinations: { selected_target: () => ({ key: 'external:mp', kind: 'micropub', blog_id: 'mp', name: 'me.example' }) },
+      external_blogs: {
+        get_blog: () => ({ id: 'mp', name: 'me.example', kind: 'micropub', micropub_endpoint: 'https://me.example/micropub', media_endpoint: 'https://me.example/media' }),
+      },
+      get_secret: async () => ({ token: 'external-token' }),
+    });
+    store.start([photo('a')]);
+
+    await store.post();
+
+    expect(micropub.upload_media.mock.calls[0][0]).toMatchObject({ token: 'external-token', media_endpoint: 'https://me.example/media', destination_uid: null });
+    expect(micropub.create_post.mock.calls[0][0]).toMatchObject({ token: 'external-token', endpoint: 'https://me.example/micropub' });
+    expect(micropub.create_post.mock.calls[0][0].form['mp-destination'] ?? null).toBe(null);
+  });
+
+  it('uploads again after switching to another blog', async () => {
+    let target = { key: 'https://vincent.blog/', kind: 'microblog', uid: 'https://vincent.blog/', name: 'vincent.blog' };
+    const { micropub, store } = build_store({
+      micropub: {
+        create_post: mock(async () => {
+          throw new Error('offline');
+        }),
+      },
+      destinations: { selected_target: () => target },
+    });
+    store.start([photo('a')]);
+    await store.post();
+
+    target = { key: 'https://photos.vincent.blog/', kind: 'microblog', uid: 'https://photos.vincent.blog/', name: 'photos' };
+    await store.post();
+
+    expect(micropub.upload_media).toHaveBeenCalledTimes(2);
+    expect(micropub.upload_media.mock.calls[1][0].destination_uid).toBe('https://photos.vincent.blog/');
+  });
+
+  it('refuses videos for blogs that cannot receive them', async () => {
+    const { store } = build_store({
+      destinations: { selected_target: () => ({ key: 'external:wp', kind: 'xmlrpc', blog_id: 'wp', name: 'wp.example' }) },
+      external_blogs: { get_blog: () => ({ id: 'wp', name: 'wp.example', kind: 'xmlrpc', xmlrpc_endpoint: 'x', blog_id: '1', username: 'v' }) },
+      get_secret: async () => ({ password: 'p' }),
+    });
+    store.start([{ kind: 'video', uri: 'file:///v.mp4', width: 640, height: 360 }]);
+
+    await store.post();
+
+    expect(store.error_message).toBe('wp.example can’t receive videos from Sunlit. Remove the video or choose another blog.');
+  });
+
+  it('does not sign out of Micro.blog when another blog rejects its token', async () => {
+    const error = new Error('Unauthorized');
+    error.status = 401;
+    const { on_auth_error, store } = build_store({
+      micropub: {
+        upload_media: mock(async () => {
+          throw error;
+        }),
+      },
+      destinations: { selected_target: () => ({ key: 'external:mp', kind: 'micropub', blog_id: 'mp', name: 'me.example' }) },
+      external_blogs: { get_blog: () => ({ id: 'mp', name: 'me.example', kind: 'micropub', micropub_endpoint: 'https://me.example/micropub', media_endpoint: 'https://me.example/media' }) },
+      get_secret: async () => ({ token: 'external-token' }),
+    });
+    store.start([photo('a')]);
+
+    await store.post();
+
+    expect(on_auth_error).not.toHaveBeenCalled();
+    expect(store.error_message).toBe('me.example no longer accepts Sunlit’s sign in. Remove the blog in the blog chooser and add it again.');
+  });
+
+  it('looks up the media endpoint again when connecting could not find one', async () => {
+    const { micropub, store } = build_store({
+      micropub: {
+        fetch_config: mock(async () => ({ 'media-endpoint': 'https://me.example/media' })),
+      },
+      destinations: { selected_target: () => ({ key: 'external:mp', kind: 'micropub', blog_id: 'mp', name: 'me.example' }) },
+      external_blogs: { get_blog: () => ({ id: 'mp', name: 'me.example', kind: 'micropub', micropub_endpoint: 'https://me.example/micropub', media_endpoint: null }) },
+      get_secret: async () => ({ token: 'external-token' }),
+    });
+    store.start([photo('a')]);
+
+    await store.post();
+
+    expect(micropub.upload_media.mock.calls[0][0].media_endpoint).toBe('https://me.example/media');
+    expect(store.error_message).toBe(null);
+  });
+
+  it('shows uploading, not publishing, while the blog is still being prepared', async () => {
+    let finish_loading;
+    const { store } = build_store({
+      destinations: { load: () => new Promise(resolve => (finish_loading = resolve)) },
+    });
+    store.start([photo('a')]);
+
+    const posting = store.post();
+
+    expect(store.is_posting).toBe(true);
+    expect(store.is_publishing()).toBe(false);
+    finish_loading();
+    await posting;
   });
 
   it('tells the session when the token is rejected', async () => {

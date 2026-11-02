@@ -2,6 +2,7 @@ import Auth from './Auth';
 import Composer from './Composer';
 import { SESSION_EXPIRED_MESSAGE } from './createAuthStore';
 import Destinations from './Destinations';
+import ExternalBlogs from './ExternalBlogs';
 import PlaceSearch from './PlaceSearch';
 import Places from './Places';
 import Posts from './Posts';
@@ -9,6 +10,7 @@ import ReplyDrafts from './ReplyDrafts';
 import Uploads from './Uploads';
 import Users from './Users';
 import { on_session_expired } from './sessionEvents';
+import { update_widgets } from '../widget/updateWidgets';
 
 let stop_listening = null;
 
@@ -37,17 +39,20 @@ const Session = {
 
     await Auth.clear_invalid_session(SESSION_EXPIRED_MESSAGE);
     reset_stores();
+    update_widgets();
   },
 
   async sign_out() {
     await Auth.sign_out();
     reset_stores();
+    update_widgets();
   },
 };
 
 function reset_stores() {
   Composer.reset();
   Destinations.reset();
+  ExternalBlogs.reset().catch(error => console.error('Could not forget external blogs.', error));
   Places.reset();
   PlaceSearch.reset();
   Posts.reset();

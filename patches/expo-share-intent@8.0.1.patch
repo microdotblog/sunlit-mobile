@@ -1,0 +1,29 @@
+diff --git a/android/src/main/java/expo/modules/shareintent/ExpoShareIntentModule.kt b/android/src/main/java/expo/modules/shareintent/ExpoShareIntentModule.kt
+index ff5b1001e7bb3443482727cec48c22579465c73b..7de9ada537c1a3c1c72a1fe4509fe02f60c312ce 100644
+--- a/android/src/main/java/expo/modules/shareintent/ExpoShareIntentModule.kt
++++ b/android/src/main/java/expo/modules/shareintent/ExpoShareIntentModule.kt
+@@ -138,7 +138,15 @@ class ExpoShareIntentModule : Module() {
+                     notifyError("Invalid action for text sharing: " + intent.action)
+                 }
+             } else {
+-                // files / medias
++                try {
++                    handleFileShareIntent(intent)
++                } catch (error: Exception) {
++                    notifyError("Cannot read the shared file: " + error.message)
++                }
++            }
++        }
++
++        private fun handleFileShareIntent(intent: Intent) {
+                 if (intent.action == Intent.ACTION_SEND) {
+                     val uri = intent.parcelable<Uri>(Intent.EXTRA_STREAM);
+                     if (uri != null) {
+@@ -156,7 +164,6 @@ class ExpoShareIntentModule : Module() {
+                 } else {
+                     notifyError("Invalid action for file sharing: " + intent.action)
+                 }
+-            }
+         }
+ 
+         /*

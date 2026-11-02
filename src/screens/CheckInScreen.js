@@ -133,7 +133,7 @@ function CheckInScreen({ navigation }) {
 
 const CheckInHeader = observer(function CheckInHeader({ navigation, note, on_change_note }) {
   const theme = use_theme();
-  const destination = Destinations.selected_for_check_ins();
+  const destination = Destinations.selected_check_in_target();
   const delay = Places.delay();
 
   return (
@@ -150,14 +150,13 @@ const CheckInHeader = observer(function CheckInHeader({ navigation, note, on_cha
         {destination ? (
           <Pressable
             accessibilityRole="button"
-            disabled={!Destinations.has_choice()}
             onPress={() => navigation.navigate('Destinations', { purpose: 'check_ins' })}
             style={[styles.chip, { backgroundColor: theme.colors.surface }]}
           >
             <Text numberOfLines={1} style={[styles.chip_label, { color: theme.colors.ink }]}>
               Checking in to {destination.name}
             </Text>
-            {Destinations.has_choice() ? <Icon color={theme.colors.ink_soft} name="expand" size={18} /> : null}
+            <Icon color={theme.colors.ink_soft} name="expand" size={18} />
           </Pressable>
         ) : null}
         {delay.seconds > 0 ? (

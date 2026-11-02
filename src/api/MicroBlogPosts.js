@@ -25,6 +25,10 @@ export function fetch_discover({ token, before_id = null }) {
   }
 }
 
+export function fetch_discover_collection({ token, collection }) {
+  return request_json(`/posts/discover/${encodeURIComponent(collection)}`, { token });
+}
+
 export function fetch_mentions({ token, before_id = null }) {
   return request_json('/posts/mentions', {
     token,

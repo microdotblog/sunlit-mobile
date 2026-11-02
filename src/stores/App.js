@@ -3,6 +3,7 @@ import { flow, types } from 'mobx-state-tree';
 
 import Auth from './Auth';
 import Destinations from './Destinations';
+import ExternalBlogs from './ExternalBlogs';
 import Places from './Places';
 import ReplyDrafts from './ReplyDrafts';
 import Session from './Session';
@@ -31,6 +32,7 @@ const AppStore = types
 
       try {
         yield ReplyDrafts.hydrate();
+        yield ExternalBlogs.hydrate();
         yield Destinations.hydrate();
         yield Places.hydrate();
         yield Auth.hydrate();

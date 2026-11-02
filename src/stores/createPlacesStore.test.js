@@ -1,6 +1,7 @@
 import { describe, expect, it, mock } from 'bun:test';
 
 import { create_places_store, SOURCE_PAGE_SIZE } from './createPlacesStore';
+import { create_publishing } from './publishers';
 
 function check_in_item(index) {
   return {
@@ -31,16 +32,26 @@ function build_store(overrides = {}) {
     did_load: true,
     check_in_uid: 'https://checkins.vincent.blog/',
     load: mock(async () => {}),
-    selected_for_check_ins() {
-      return { uid: this.check_in_uid, name: 'checkins' };
+    selected_target() {
+      return this.selected_check_in_target();
+    },
+    selected_check_in_target() {
+      return { key: this.check_in_uid, kind: 'microblog', uid: this.check_in_uid, name: 'checkins' };
     },
     ...overrides.destinations,
   };
+  const publishing = create_publishing({
+    micropub,
+    xmlrpc: {},
+    destinations,
+    external_blogs: { get_blog: () => null },
+    get_token: () => 'token-1',
+    get_secret: async () => null,
+    read_base64: async () => '',
+  });
   const storage = { load: mock(async () => overrides.saved || null), save: mock(async () => {}) };
   const store = create_places_store({
-    micropub,
-    destinations,
-    get_token: () => 'token-1',
+    publishing,
     storage,
     now: () => new Date('2026-11-02T10:00:00Z'),
   });
@@ -56,6 +67,7 @@ describe('create_places_store', () => {
 
     expect(micropub.fetch_source).toHaveBeenCalledWith({
       token: 'token-1',
+      endpoint: undefined,
       destination_uid: 'https://checkins.vincent.blog/',
       offset: 0,
       limit: SOURCE_PAGE_SIZE,
@@ -91,6 +103,7 @@ describe('create_places_store', () => {
   it('refuses to check in while the blogs could not be loaded', async () => {
     const { micropub, store } = build_store({ destinations: { did_load: false } });
 
+
     await expect(store.check_in(PLACE, '')).rejects.toThrow('Could not load your blogs');
 
     expect(micropub.create_post).not.toHaveBeenCalled();
@@ -105,21 +118,22 @@ describe('create_places_store', () => {
 
     expect(micropub.delete_post).toHaveBeenCalledWith({
       token: 'token-1',
+      endpoint: undefined,
       url: 'https://vincent.blog/1.html',
       destination_uid: 'https://checkins.vincent.blog/',
     });
     expect(store.check_ins).toHaveLength(0);
   });
 
-  it('reloads when the check-in blog changes and deletes on the blog the list came from', async () => {
+  it('reloads when the check-in blog changes and refuses to delete from the old list', async () => {
     const { destinations, micropub, store } = build_store();
     await store.load();
 
     destinations.check_in_uid = 'https://photos.vincent.blog/';
 
     expect(store.is_current()).toBe(false);
-    await store.delete_check_in('https://vincent.blog/1.html');
-    expect(micropub.delete_post.mock.calls[0][0].destination_uid).toBe('https://checkins.vincent.blog/');
+    await expect(store.delete_check_in('https://vincent.blog/1.html')).rejects.toThrow('Your check-in blog changed');
+    expect(micropub.delete_post).not.toHaveBeenCalled();
 
     await store.load();
     expect(micropub.fetch_source.mock.calls.at(-1)[0].destination_uid).toBe('https://photos.vincent.blog/');

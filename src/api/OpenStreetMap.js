@@ -1,8 +1,6 @@
-import app_config from '../../app.json';
-import { create_request_error } from './request';
+import { create_request_error, USER_AGENT } from './request';
 
 export const PHOTON_URL = 'https://photon.komoot.io';
-export const USER_AGENT = `Sunlit/${app_config.expo.version} (Android; https://sunlit.io/)`;
 export const REQUEST_TIMEOUT_MS = 15000;
 export const NEARBY_RADIUS_KM = 1;
 export const SEARCH_RADIUS_METERS = 10000;

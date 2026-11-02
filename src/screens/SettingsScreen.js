@@ -17,8 +17,8 @@ const HELP_URL = 'https://help.micro.blog/';
 function SettingsScreen({ navigation }) {
   const theme = use_theme();
   const version = `${Application.nativeApplicationVersion || ''} (${Application.nativeBuildVersion || ''})`;
-  const destination = Destinations.selected();
-  const check_in_destination = Destinations.selected_for_check_ins();
+  const destination = Destinations.selected_target();
+  const check_in_destination = Destinations.selected_check_in_target();
 
   React.useEffect(() => {
     Destinations.load();
@@ -50,13 +50,13 @@ function SettingsScreen({ navigation }) {
       <SectionLabel title="Publishing" />
       <SettingsRow
         label="Publish new posts to"
-        on_press={Destinations.has_choice() ? () => navigation.navigate('Destinations') : undefined}
+        on_press={() => navigation.navigate('Destinations')}
         value={destination ? destination.name : ''}
       />
       <SectionLabel title="Check-ins" />
       <SettingsRow
         label="Check in to"
-        on_press={Destinations.has_choice() ? () => navigation.navigate('Destinations', { purpose: 'check_ins' }) : undefined}
+        on_press={() => navigation.navigate('Destinations', { purpose: 'check_ins' })}
         value={check_in_destination ? check_in_destination.name : ''}
       />
       <SettingsRow

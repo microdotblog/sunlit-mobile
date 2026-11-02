@@ -45,17 +45,30 @@ Verified on the Pixel 7 emulator while signed in: the compose button and its lon
 
 Verified on the Pixel 7 emulator: the Places tab, the location permission prompt, nearby places (Portland GPS fix), live search, place selection, and the timeout error state. Not yet tried on a device: posting a real check-in, history rows with thumbnails, and deleting a check-in.
 
-## Milestone 4: Android system integration
+## Milestone 4: Share target and widget
 
-- [ ] Share target (images, a movie, URLs; glass.photo special case)
-- [ ] Home-screen widget (Timeline or Discover)
-- [ ] Push via FCM (`/users/push/register`, `app_name=Sunlit`)
+- [x] Share target: up to 10 images or videos, and URLs from any app (`expo-share-intent`, patched so an unreadable file reports an error instead of crashing). A glass.photo link imports that photo, like iOS.
+- [x] Home-screen widget (`react-native-android-widget`): photos from your timeline or a Discover category, laid out as one photo, a feature photo with a strip, or a list depending on its size. Tapping a photo opens its conversation. A configuration screen picks the source, and the widget refreshes every 30 minutes and whenever Sunlit goes to the background.
+
+Verified on the Pixel 7 emulator: sharing an image URL from another app opens the composer with the photo, and an unreadable share shows a toast instead of crashing. Not yet tried on a device: sharing several photos or a video from Photos, and the widget itself (it needs to be added from the launcher).
+
+iOS keeps its own share extension and widget, so the Android ones are switched off on iOS (`disableIOS`).
 
 ## Milestone 5: External blogs
 
-- [ ] Micropub blogs via IndieAuth (`client_id=https://sunlit.io/`, `redirect_uri=https://sunlit.io/micropub/redirect`)
-- [ ] WordPress and other XML-RPC blogs (RSD discovery, `blogger.getUsersBlogs`)
-- [ ] Separate blog selection for posts and for check-ins
+- [x] Micropub blogs via IndieAuth (`client_id=https://sunlit.io/`, `redirect_uri=https://sunlit.io/micropub/redirect`, which bounces to `sunlit://micropub`)
+- [x] WordPress and other XML-RPC blogs (RSD discovery, `blogger.getUsersBlogs` to check the password, `metaWeblog.newMediaObject`, `wp.newPost` or `metaWeblog.newPost`)
+- [x] Separate blog selection for posts and for check-ins. XML-RPC blogs can take photo posts but not check-ins or video.
+- [x] Remove an external blog with a long press in the blog chooser
+
+When a blog offers both, Sunlit prefers Micropub, where iOS prefers XML-RPC. Micropub gets video, check-ins, and a token instead of a stored password. Tokens and passwords live in SecureStore, never in the blog list. Sign-in uses PKCE, and Sunlit refuses Micropub or XML-RPC endpoints that aren't https, so a password never travels in the clear. iOS allows plain http, so a blog that only offers http works there and not here.
+
+Verified on the Pixel 7 emulator: the blog chooser with Micro.blog blogs and "Add external blog", and discovery of wordpress.org over RSD up to the password step. Not yet tried on a device: a full IndieAuth sign-in to a Micropub blog, connecting a WordPress blog, and posting to either.
+
+## Milestone 6: Push notifications
+
+- [ ] Push via FCM (`/users/push/register`, `app_name=Sunlit`)
+- [ ] Open the right conversation from a notification (`sunlit://notification` is already wired)
 
 ## Open questions
 
@@ -67,7 +80,8 @@ Verified on the Pixel 7 emulator: the Places tab, the location permission prompt
 - **IndieAuth client_id.** `https://sunlit.io/` is assumed. Check that the Micro.blog consent screen shows "Sunlit" nicely (sunlit.io may need h-app markup or a `client.json`).
 - **Push.** The Micro.blog server needs to accept FCM tokens for `app_name=Sunlit`. A Sunlit Firebase project and `google-services.json` are needed.
 - **Bookmarks list.** iOS has an unreachable `BookmarksViewController`. Should Android expose a bookmarks screen?
-- **Widget.** Pick an approach for a React Native widget (e.g. `react-native-android-widget`) or write it natively in Kotlin.
+- **sunlit.io/micropub/redirect.** External Micropub sign-in relies on this page bouncing to `sunlit://micropub` with `code`, `state`, and `me`. Confirm it does this for Android, not only for the iOS app.
+- **Hosts that block OkHttp.** wordpress.org drops connections that send OkHttp's default `okhttp/x` user agent. Every request now sends `USER_AGENT`. Watch for other hosts that filter by user agent.
 - **Release signing.** Keystore and Play Console listing for `blog.micro.sunlit`.
 - **Privacy disclosure.** Nearby lookups and place searches send coordinates to komoot's Photon (photon.komoot.io), and tiles come from tile.openstreetmap.org. The Play Data safety form and the Sunlit privacy policy need to say so. The user's own fix is never posted, only the chosen venue.
-- **External blog credentials.** iOS keeps per-blog tokens and XML-RPC passwords in UserDefaults. Android will use SecureStore. Confirm there is no need to migrate anything.
+- **External blog credentials.** iOS keeps per-blog tokens and XML-RPC passwords in UserDefaults. Android uses SecureStore, and there is nothing to migrate.

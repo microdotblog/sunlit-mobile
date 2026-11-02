@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, mock } from 'bun:test';
 
-import { create_post, delete_post, upload_media } from './Micropub';
+import { create_post, delete_post, fetch_config, upload_media } from './Micropub';
 
 const original_fetch = globalThis.fetch;
 
@@ -51,6 +51,24 @@ describe('create_post', () => {
     expect(location).toBe('https://vincent.blog/2026/11/02/post.html');
     expect(options.headers['Content-Type']).toBe('application/json');
     expect(options.body).toBe('{"type":["h-entry"]}');
+  });
+
+  it('accepts a created post whose body is not JSON, as the Micropub spec allows', async () => {
+    respond_with(201, '<html>Created</html>', { Location: 'https://site.example/post' });
+
+    const location = await create_post({ token: 't', endpoint: 'https://site.example/micropub', json: { type: ['h-entry'] } });
+
+    expect(location).toBe('https://site.example/post');
+  });
+});
+
+describe('fetch_config', () => {
+  it('keeps the query string of an endpoint without pretty permalinks', async () => {
+    const fetch_mock = respond_with(200, '{}');
+
+    await fetch_config({ token: 't', endpoint: 'https://site.example/?rest_route=/micropub/1.0/endpoint' });
+
+    expect(fetch_mock.mock.calls[0][0]).toBe('https://site.example/?rest_route=%2Fmicropub%2F1.0%2Fendpoint&q=config');
   });
 });
 

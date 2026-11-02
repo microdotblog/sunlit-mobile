@@ -19,6 +19,25 @@ function build_store(saved = null) {
 }
 
 describe('create_destinations_store', () => {
+  it('lists external blogs as targets and keeps XML-RPC blogs out of check-ins', async () => {
+    const storage = { load: mock(async () => null), save: mock(async () => {}) };
+    const external_blogs = {
+      blogs: [
+        { id: 'wp', name: 'wp.example', kind: 'xmlrpc' },
+        { id: 'mp', name: 'me.example', kind: 'micropub' },
+      ],
+    };
+    const store = create_destinations_store({ api: { fetch_config: mock(async () => CONFIG) }, get_token: () => 't', storage, external_blogs });
+    await store.load();
+
+    expect(store.targets().map(target => target.key)).toEqual(['https://photos.vincent.blog/', 'https://vincent.blog/', 'external:wp', 'external:mp']);
+    expect(store.check_in_targets().map(target => target.key)).not.toContain('external:wp');
+
+    await store.select('external:wp');
+    expect(store.selected_target().kind).toBe('xmlrpc');
+    expect(store.selected_check_in_target().key).toBe('https://vincent.blog/');
+  });
+
   it('uses the Micro.blog default blog until one is chosen', async () => {
     const { store } = build_store();
 
@@ -26,7 +45,6 @@ describe('create_destinations_store', () => {
 
     expect(store.media_endpoint).toBe('https://micro.blog/micropub/media');
     expect(store.selected().name).toBe('vincent.blog');
-    expect(store.has_choice()).toBe(true);
   });
 
   it('remembers the chosen blog', async () => {
@@ -43,11 +61,11 @@ describe('create_destinations_store', () => {
     const { storage, store } = build_store();
     await store.load();
 
-    expect(store.selected_for_check_ins().uid).toBe('https://vincent.blog/');
+    expect(store.selected_check_in_target().uid).toBe('https://vincent.blog/');
 
     await store.select_for_check_ins('https://photos.vincent.blog/');
 
-    expect(store.selected_for_check_ins().uid).toBe('https://photos.vincent.blog/');
+    expect(store.selected_check_in_target().uid).toBe('https://photos.vincent.blog/');
     expect(store.selected().uid).toBe('https://vincent.blog/');
     expect(storage.save).toHaveBeenLastCalledWith({ destination_uid: null, check_in_uid: 'https://photos.vincent.blog/' });
   });

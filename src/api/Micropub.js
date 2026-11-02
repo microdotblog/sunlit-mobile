@@ -3,8 +3,8 @@ import { request_json, send_request } from './request';
 export const MICROPUB_PATH = '/micropub';
 export const MICROPUB_MEDIA_PATH = '/micropub/media';
 
-export function fetch_config({ token }) {
-  return request_json(MICROPUB_PATH, {
+export function fetch_config({ token, endpoint = MICROPUB_PATH }) {
+  return request_json(endpoint, {
     token,
     query: { q: 'config' },
   });
@@ -23,6 +23,7 @@ export async function upload_media({ token, media_endpoint = MICROPUB_MEDIA_PATH
     token,
     method: 'POST',
     multipart,
+    is_json_optional: true,
   });
 
   return {
@@ -31,27 +32,29 @@ export async function upload_media({ token, media_endpoint = MICROPUB_MEDIA_PATH
   };
 }
 
-export async function create_post({ token, form = null, json = null }) {
-  const { location } = await send_request(MICROPUB_PATH, {
+export async function create_post({ token, endpoint = MICROPUB_PATH, form = null, json = null }) {
+  const { location } = await send_request(endpoint, {
     token,
     method: 'POST',
     form,
     json,
+    is_json_optional: true,
   });
 
   return location;
 }
 
-export function delete_post({ token, url, destination_uid = null }) {
-  return send_request(MICROPUB_PATH, {
+export function delete_post({ token, endpoint = MICROPUB_PATH, url, destination_uid = null }) {
+  return send_request(endpoint, {
     token,
     method: 'POST',
     form: { action: 'delete', url, 'mp-destination': destination_uid },
+    is_json_optional: true,
   });
 }
 
-export async function fetch_source({ token, destination_uid = null, offset = 0, limit = 100 }) {
-  const payload = await request_json(MICROPUB_PATH, {
+export async function fetch_source({ token, endpoint = MICROPUB_PATH, destination_uid = null, offset = 0, limit = 100 }) {
+  const payload = await request_json(endpoint, {
     token,
     query: { q: 'source', limit, offset, 'mp-destination': destination_uid },
   });

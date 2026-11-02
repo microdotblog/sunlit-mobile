@@ -11,6 +11,7 @@ import ComposerScreen from '../screens/ComposerScreen';
 import ConversationScreen from '../screens/ConversationScreen';
 import DestinationsScreen from '../screens/DestinationsScreen';
 import DiscoverScreen from '../screens/DiscoverScreen';
+import ExternalBlogScreen from '../screens/ExternalBlogScreen';
 import FollowingScreen from '../screens/FollowingScreen';
 import ImageViewerScreen from '../screens/ImageViewerScreen';
 import MentionsScreen from '../screens/MentionsScreen';
@@ -107,6 +108,7 @@ function RootNavigator() {
       />
       <Stack.Screen component={CheckInDelayScreen} name="CheckInDelay" options={{ presentation: 'modal', title: 'Schedule check-ins' }} />
       <Stack.Screen component={DestinationsScreen} name="Destinations" options={{ presentation: 'modal', title: 'Post to' }} />
+      <Stack.Screen component={ExternalBlogScreen} name="ExternalBlog" options={{ title: 'Add external blog' }} />
       <Stack.Screen component={UploadsScreen} name="Uploads" options={{ title: 'Micro.blog uploads' }} />
       <Stack.Screen
         component={ImageViewerScreen}

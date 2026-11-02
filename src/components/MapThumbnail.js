@@ -2,7 +2,8 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 
-import { tiles_around, TILE_SIZE, USER_AGENT } from '../api/OpenStreetMap';
+import { tiles_around, TILE_SIZE } from '../api/OpenStreetMap';
+import { USER_AGENT } from '../api/request';
 import { use_theme } from '../theme/theme';
 
 export default function MapThumbnail({ latitude, longitude, size = 56 }) {
