@@ -6,6 +6,7 @@ import ExternalBlogs from './ExternalBlogs';
 import PlaceSearch from './PlaceSearch';
 import Places from './Places';
 import Posts from './Posts';
+import Push from './Push';
 import ReplyDrafts from './ReplyDrafts';
 import Uploads from './Uploads';
 import Users from './Users';
@@ -37,12 +38,14 @@ const Session = {
       return;
     }
 
+    Push.discard_device_token();
     await Auth.clear_invalid_session(SESSION_EXPIRED_MESSAGE);
     reset_stores();
     update_widgets();
   },
 
   async sign_out() {
+    Push.unregister();
     await Auth.sign_out();
     reset_stores();
     update_widgets();

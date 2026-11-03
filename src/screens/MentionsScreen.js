@@ -8,6 +8,7 @@ import PostRow from '../components/PostRow';
 import { use_post_list } from '../components/usePostList';
 import { use_scroll_to_top_title } from '../navigation/headers';
 import Posts from '../stores/Posts';
+import Push from '../stores/Push';
 import { use_theme } from '../theme/theme';
 
 const MENTIONS_KEY = 'mentions';
@@ -19,6 +20,10 @@ function MentionsScreen({ navigation }) {
 
   useScrollToTop(list_ref);
   use_scroll_to_top_title(navigation, 'Mentions', list_ref);
+
+  React.useEffect(() => {
+    Push.enable({ should_ask: true });
+  }, []);
 
   if (!list || (list.is_loading && list.items.length === 0)) {
     return <LoadingState />;

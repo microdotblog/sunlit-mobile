@@ -9,6 +9,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import PushHandler from './components/PushHandler';
 import ShareIntentHandler from './components/ShareIntentHandler';
 import { linking } from './navigation/linking';
 import RootNavigator from './navigation/RootNavigator';
@@ -60,6 +61,7 @@ function App() {
               </NavigationContainer>
             )}
             <ShareIntentHandler is_navigation_ready={is_navigation_ready} navigation_ref={navigation_ref} />
+            <PushHandler is_navigation_ready={is_navigation_ready} navigation_ref={navigation_ref} />
             <ToastOverlay />
           </KeyboardProvider>
         </SafeAreaProvider>

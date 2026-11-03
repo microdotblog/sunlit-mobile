@@ -67,8 +67,14 @@ Verified on the Pixel 7 emulator: the blog chooser with Micro.blog blogs and "Ad
 
 ## Milestone 6: Push notifications
 
-- [ ] Push via FCM (`/users/push/register`, `app_name=Sunlit for Android`, `push_env=production`, as microblog-react does)
-- [ ] Open the right conversation from a notification (`sunlit://notification` is already wired)
+- [x] Push via FCM with `expo-notifications`: register as `Sunlit for Android` (`/users/push/register`, `push_env=production`), the same request microblog-react makes
+- [x] Ask for notification permission the first time Mentions opens, like iOS. After that, register silently on launch.
+- [x] Re-register when Firebase rotates the token, and unregister from the server on sign-out (iOS only drops the token locally)
+- [x] Tapping a notification opens its conversation when it carries a `post_id`, and Mentions otherwise. iOS always opens Mentions.
+- [x] Notifications that arrive while Sunlit is open show as a banner and refresh Mentions
+- [x] A monochrome notification icon (white wave glyph) and a "Mentions and replies" channel
+
+Verified on the Pixel 7 emulator: the permission prompt on first opening Mentions, granting it, and registering the FCM token without errors. Not yet tried: receiving a real push (it needs microblog-web#1139 deployed) and tapping one.
 
 ## Open questions
 
@@ -78,6 +84,7 @@ Verified on the Pixel 7 emulator: the blog chooser with Micro.blog blogs and "Ad
 - **Timeline offline cache.** iOS keeps no disk cache. inkwell caches its timeline as JSON. Is that worth adding?
 - **OSM fair use.** Places use the public Photon (photon.komoot.io) and OSM tile servers, with an identifying User-Agent and attribution. If Sunlit grows, move to a hosted OSM provider or a Micro.blog-run Photon. The public Overpass servers were overloaded in testing (all mirrors 502 or timing out), which is why Photon was chosen.
 - **IndieAuth client_id.** `https://sunlit.io/` is assumed. Check that the Micro.blog consent screen shows "Sunlit" nicely (sunlit.io may need h-app markup or a `client.json`).
+- **Notification icon.** The white wave glyph in `assets/images/notification-icon.png` was drawn in code to match the app icon. Swap in a designed asset if you want one.
 - **Push.** Sunlit for Android shares microblog-react's Firebase project (`micro-blog-7fd03`): add an Android app for `blog.micro.sunlit` there and download its `google-services.json`. The server maps `Sunlit for Android` onto the Micro.blog push credentials (microblog-web branch `feature/sunlit-fcm`). It must not register as `Sunlit`, which the server treats as the iOS app and sends over APNs.
 - **Bookmarks list.** iOS has an unreachable `BookmarksViewController`. Should Android expose a bookmarks screen?
 - **sunlit.io/micropub/redirect.** External Micropub sign-in relies on this page bouncing to `sunlit://micropub` with `code`, `state`, and `me`. Confirm it does this for Android, not only for the iOS app.

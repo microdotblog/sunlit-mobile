@@ -6,7 +6,7 @@ Android is the target, but the code stays buildable on iOS: platform differences
 
 ## Product concepts
 
-Timeline (photos and videos from people you follow), Discover, Mentions, profiles, conversations and replies, the image viewer, bookmarks, following, the photo composer, Places check-ins, a share target, a home-screen widget, and external blogs (Micropub and WordPress/XML-RPC). Push is the next milestone. `TODO.md` tracks milestones and open questions.
+Timeline (photos and videos from people you follow), Discover, Mentions, profiles, conversations and replies, the image viewer, bookmarks, following, the photo composer, Places check-ins, a share target, a home-screen widget, and external blogs (Micropub and WordPress/XML-RPC), and push notifications. `TODO.md` tracks milestones and open questions.
 
 ## Expo
 
@@ -31,6 +31,7 @@ For Expo documentation and how-tos, see https://docs.expo.dev/llms.txt.
   - `ExternalBlogs` discovers a blog (Micropub links first, then RSD), runs IndieAuth or checks an XML-RPC password, and keeps the blog list. Secrets live in SecureStore under `ExternalBlogSecret-<id>`. Signing out or an expired Micro.blog session forgets every external blog and its secret, because the next person to sign in may be someone else. Discovery uses a generation counter, so a discovery that finishes after its screen closed is dropped. IndieAuth uses PKCE (S256), and Sunlit only talks to Micropub and XML-RPC endpoints over https.
   - `Publishing` (`publishers.js`) turns the selected target into a publisher with one interface (`upload`, `publish`, `create_json`, `fetch_source`, `delete_post`). The Composer and Places talk only to publishers. Only a Micro.blog publisher's 401 signs you out.
   - `Places` holds check-in history (`micropub?q=source`, paged up to 500), posts check-ins (a JSON h-entry with a `checkin` h-card, the same as iOS), deletes them, and stores the publish delay. `PlaceSearch` finds nearby places and searches them through Photon (`api/OpenStreetMap.js`). `currentLocation.js` asks for a high-accuracy fix, because balanced accuracy has no GPS fallback.
+  - `Push` (`create_push_store`) asks for notification permission from Mentions, registers the FCM token as `Sunlit for Android`, and unregisters on sign-out before the token is cleared. `src/platform/pushNotifications.js` wraps expo-notifications and reports "denied" on iOS, so an iOS build never registers an APNs token under the Android name. `src/components/PushHandler.js` routes taps (conversation for a `post_id`, Mentions otherwise) and re-registers rotated tokens.
 - `src/components/ShareIntentHandler.js` opens the composer with shared files or URLs (`shareImport.js` downloads URLs and the glass.photo case).
 - `src/widget/` is the `SunlitPhotos` home-screen widget. `widgetData.js` builds it outside React, with the token read straight from SecureStore. `updateWidgets.js` refreshes widgets when the app backgrounds or the session ends.
 - `src/stores/models/`: `Post` and `User` models, plus `postContent.js`, which parses `content_html` into media and styled paragraphs (matching iOS `SunlitPost`).
@@ -50,6 +51,8 @@ For Expo documentation and how-tos, see https://docs.expo.dev/llms.txt.
 - **OSM tile volume.** Lists showing `MapThumbnail` keep a small `windowSize`. The tile policy forbids fetching tiles nobody is looking at.
 - **Emulator location.** Send `adb emu geo fix <lon> <lat>` a few times while the app is waiting for a fix.
 - **Share intents.** `expo-share-intent` is patched (`patches/`) so a file it can't read reports an error instead of crashing the app. Keep the patch when upgrading, or check the upstream fix.
+- **iOS builds and push.** The expo-notifications plugin adds the `aps-environment` entitlement on iOS, so an iOS device build needs a provisioning profile with push enabled, even though Sunlit for Android never registers on iOS.
+- **Push app name.** Always register as `Sunlit for Android`. The server sends `Sunlit` over APNs (that is the iOS app), and only knows to use Firebase for `Sunlit for Android`.
 - **User agent.** Some hosts (wordpress.org among them) drop connections that carry OkHttp's default user agent. Send `USER_AGENT` on every request, using `fetch_external` for servers that aren't Micro.blog.
 - **Post media.** It is frozen plain data. Do not turn it into nested models, because re-fetching a post would leave components holding dead nodes.
 
