@@ -45,7 +45,7 @@ const Home = observer(function Home() {
       <Tabs.Screen
         component={TimelineScreen}
         name="Timeline"
-        options={{ tabBarIcon: ({ color }) => <Icon color={color} name="timeline" size={24} /> }}
+        options={{ headerShown: is_signed_in, tabBarIcon: ({ color }) => <Icon color={color} name="timeline" size={24} /> }}
       />
       {is_signed_in ? (
         <Tabs.Screen
