@@ -45,3 +45,6 @@ android/app/release/
 # Signing
 *.keystore
 !android/app/debug.keystore
+
+/google-services.json
+/android/app/google-services.json

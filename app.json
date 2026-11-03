@@ -75,6 +75,7 @@
     ],
     "android": {
       "package": "blog.micro.sunlit",
+      "googleServicesFile": "./google-services.json",
       "allowBackup": false,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/app-icon.png",
