@@ -48,3 +48,9 @@ android/app/release/
 
 /google-services.json
 /android/app/google-services.json
+
+# IDE
+.idea/
+
+# Gradle
+/android/gradle/gradle-daemon-jvm.properties
