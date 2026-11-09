@@ -6,7 +6,7 @@ Android is the target, but the code stays buildable on iOS: platform differences
 
 ## Product concepts
 
-Timeline (photos and videos from people you follow), Discover, Mentions, profiles, conversations and replies, the image viewer, bookmarks, following, the photo composer, Places check-ins, a share target, a home-screen widget, and external blogs (Micropub and WordPress/XML-RPC), and push notifications. `TODO.md` tracks milestones and open questions.
+Timeline (photos and videos from people you follow), Discover, Mentions, profiles, conversations and replies, the image viewer, bookmarks, following, the photo composer, Places check-ins (the tab is hidden for now behind `SHOW_PLACES_TAB` in `src/navigation/RootNavigator.js`), a share target, a home-screen widget, and external blogs (Micropub and WordPress/XML-RPC), and push notifications. `TODO.md` tracks milestones and open questions.
 
 ## Expo
 

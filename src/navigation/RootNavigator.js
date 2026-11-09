@@ -25,6 +25,8 @@ import { use_theme } from '../theme/theme';
 import { AccountButton, HeaderIconButton } from './headers';
 import TabBar from './TabBar';
 
+const SHOW_PLACES_TAB = false;
+
 const Stack = createNativeStackNavigator();
 const Tabs = createBottomTabNavigator();
 
@@ -54,7 +56,7 @@ const Home = observer(function Home() {
           options={{ tabBarIcon: ({ color }) => <Icon color={color} name="mentions" size={24} /> }}
         />
       ) : null}
-      {is_signed_in ? (
+      {is_signed_in && SHOW_PLACES_TAB ? (
         <Tabs.Screen
           component={PlacesScreen}
           name="Places"
