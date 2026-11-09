@@ -84,6 +84,7 @@
     ],
     "android": {
       "package": "blog.micro.sunlit",
+      "versionCode": 2,
       "googleServicesFile": "./google-services.json",
       "allowBackup": false,
       "adaptiveIcon": {
