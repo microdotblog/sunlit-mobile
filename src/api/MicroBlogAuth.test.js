@@ -21,7 +21,7 @@ describe('build_micro_blog_auth_url', () => {
     const url = new URL(build_micro_blog_auth_url({ state: 'abc' }));
 
     expect(url.origin + url.pathname).toBe('https://micro.blog/indieauth/auth');
-    expect(url.searchParams.get('client_id')).toBe('https://sunlit.io/');
+    expect(url.searchParams.get('client_id')).toBe('https://micro.blog/sunlit/');
     expect(url.searchParams.get('redirect_uri')).toBe('sunlit://auth/callback');
     expect(url.searchParams.get('scope')).toBe('read write');
     expect(url.searchParams.get('state')).toBe('abc');

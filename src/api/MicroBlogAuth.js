@@ -5,7 +5,7 @@ import { create_request_error } from './request';
 export const MICRO_BLOG_AUTH_URL = 'https://micro.blog/indieauth/auth';
 export const MICRO_BLOG_TOKEN_URL = 'https://micro.blog/indieauth/token';
 export const MICRO_BLOG_VERIFY_URL = 'https://micro.blog/account/verify';
-export const MICRO_BLOG_CLIENT_ID = 'https://sunlit.io/';
+export const MICRO_BLOG_CLIENT_ID = 'https://micro.blog/sunlit/';
 export const MICRO_BLOG_SCOPE = 'read write';
 export const SUNLIT_SCHEME = 'sunlit';
 export const MICRO_BLOG_REDIRECT_PATH = 'auth/callback';
