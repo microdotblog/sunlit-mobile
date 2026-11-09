@@ -37,7 +37,7 @@ For Expo documentation and how-tos, see https://docs.expo.dev/llms.txt.
 - `src/stores/models/`: `Post` and `User` models, plus `postContent.js`, which parses `content_html` into media and styled paragraphs (matching iOS `SunlitPost`).
 - `src/platform/`: `Icon` and `ContextMenu`.
 - `src/navigation/`: a root native stack with bottom tabs inside it. Deep links are `sunlit://show?id=` and `sunlit://notification`. The IndieAuth callbacks (`sunlit://auth/callback`, `sunlit://micropub`) are kept away from the navigator.
-- `plugins/`: local Expo config plugins (release signing from env, and `allowBackup` kept false when libraries such as the compressor ask for true). Always run `bunx expo prebuild --platform android --no-install` without `--clean`, and check `git diff android` afterwards.
+- `plugins/`: local Expo config plugins (release signing from env, `allowBackup` kept false when libraries such as the compressor ask for true, and the camera marked optional so Play still offers Sunlit to devices without one). Always run `bunx expo prebuild --platform android --no-install` without `--clean`, and check `git diff android` afterwards.
 
 ## Android gotchas
 

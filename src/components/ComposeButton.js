@@ -8,9 +8,10 @@ import AppStore from '../stores/App';
 import Auth from '../stores/Auth';
 import Composer from '../stores/Composer';
 import { use_theme } from '../theme/theme';
-import { pick_media } from './mediaPicker';
+import { pick_media, take_photo } from './mediaPicker';
 
 const ACTIONS = [
+  { id: 'camera', title: 'Camera' },
   { id: 'library', title: 'Photo library' },
   { id: 'uploads', title: 'Micro.blog uploads' },
 ];
@@ -24,22 +25,38 @@ function ComposeButton({ navigation }) {
 
   async function open_library() {
     try {
-      const assets = await pick_media();
-
-      if (assets.length > 0) {
-        Composer.start(assets);
-        navigation.navigate('Composer');
-      }
+      start_composer(await pick_media());
     } catch (error) {
       AppStore.show_toast('Could not open your photos');
     }
   }
 
+  async function open_camera() {
+    try {
+      start_composer(await take_photo());
+    } catch (error) {
+      if (error?.code === 'camera_permission') {
+        AppStore.show_toast(error.message);
+      } else {
+        AppStore.show_toast('Could not open the camera');
+      }
+    }
+  }
+
   function handle_action(action_id) {
-    if (action_id === 'uploads') {
+    if (action_id === 'camera') {
+      open_camera();
+    } else if (action_id === 'uploads') {
       navigation.navigate('Uploads');
     } else {
       open_library();
+    }
+  }
+
+  function start_composer(assets) {
+    if (assets.length > 0) {
+      Composer.start(assets);
+      navigation.navigate('Composer');
     }
   }
 

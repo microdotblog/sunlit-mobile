@@ -22,12 +22,13 @@
       [
         "expo-image-picker",
         {
-          "cameraPermission": false,
+          "cameraPermission": "Sunlit uses the camera to take a photo for your post.",
           "microphonePermission": false
         }
       ],
       "./plugins/withReleaseSigning",
       "./plugins/withBackupDisabled",
+      "./plugins/withOptionalCamera",
       [
         "expo-location",
         {
